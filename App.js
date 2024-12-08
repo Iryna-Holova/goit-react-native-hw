@@ -1,7 +1,12 @@
+import { useEffect } from "react";
+import { ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
 import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 import RegistrationScreen from "./src/screens/RegistrationScreen";
+import LoginScreen from "./src/screens/LoginScreen";
+
+SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -9,9 +14,21 @@ export default function App() {
     Medium: require("./assets/fonts/Roboto-Medium.ttf"),
   });
 
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
   if (!fontsLoaded) {
-    return null;
+    return <ActivityIndicator size="large" />;
   }
 
-  return <RegistrationScreen />;
+  return (
+    <>
+      <StatusBar style="dark" />
+      {/* <RegistrationScreen /> */}
+      <LoginScreen />
+    </>
+  );
 }

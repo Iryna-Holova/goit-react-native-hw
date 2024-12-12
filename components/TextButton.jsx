@@ -1,11 +1,14 @@
-import { StyleSheet, Text } from "react-native";
-import { colors, text } from "../../styles/global";
+import { Pressable, StyleSheet, Text } from "react-native";
+
+import { colors, text } from "../styles/global";
 
 export default TextButton = ({ text, touchableText, onPress }) => {
   return (
-    <Text style={styles.textButton} onPress={onPress}>
-      {text} <Text style={styles.touchableText}>{touchableText}</Text>
-    </Text>
+    <Pressable onPress={onPress}>
+      <Text style={styles.textButton}>
+        {text} <Text style={styles.touchableText}>{touchableText}</Text>
+      </Text>
+    </Pressable>
   );
 };
 

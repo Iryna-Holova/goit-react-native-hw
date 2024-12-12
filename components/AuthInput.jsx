@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { colors, text } from "../../styles/global";
+
+import { colors, text } from "../styles/global";
 
 export default AuthInput = (props) => {
   const [isFocused, setIsFocused] = useState(false);

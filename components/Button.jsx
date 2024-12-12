@@ -1,10 +1,22 @@
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
-import { colors, text } from "../../styles/global";
+
+import { colors, text } from "../styles/global";
 
 export default Button = (props) => {
   return (
-    <TouchableOpacity style={styles.button}>
-      <Text style={styles.buttonText} {...props}>
+    <TouchableOpacity
+      style={[
+        styles.button,
+        props.disabled && { backgroundColor: colors.gray },
+      ]}
+      {...props}
+    >
+      <Text
+        style={[
+          styles.buttonText,
+          props.disabled && { color: colors.text_gray },
+        ]}
+      >
         {props.children}
       </Text>
     </TouchableOpacity>

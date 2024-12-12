@@ -3,13 +3,14 @@ import {
   Dimensions,
   Keyboard,
   KeyboardAvoidingView,
+  ScrollView,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { colors } from "../../styles/global";
-import BackGroundImage from "../components/BackGroundImage";
-import PhotoInput from "../components/PhotoInput";
+import { useNavigation } from "@react-navigation/native";
+
+import { colors } from "../styles/global";
 import Title from "../components/Title";
 import AuthInput from "../components/AuthInput";
 import Button from "../components/Button";
@@ -17,9 +18,16 @@ import TextButton from "../components/TextButton";
 
 const { height: screenHeight } = Dimensions.get("window");
 
-export default RegistrationScreen = () => {
+const topSpace =
+  screenHeight * 0.6 > 356
+    ? screenHeight * 0.4
+    : Math.max(screenHeight - 356, 44);
+const keyboardOffset = screenHeight - topSpace - 280;
+
+export default LoginScreen = () => {
+  const navigation = useNavigation();
+
   const [form, setform] = useState({
-    login: "",
     email: "",
     password: "",
   });
@@ -32,33 +40,24 @@ export default RegistrationScreen = () => {
   };
 
   const handleSubmit = () => {
-    console.log(
-      `Login: ${form.login}, Email: ${form.email}, Password: ${form.password}`
-    );
+    console.log(`Email: ${form.email}, Password: ${form.password}`);
+    navigation.navigate("Home");
   };
 
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-      <View style={styles.container}>
-        <BackGroundImage />
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <KeyboardAvoidingView
           behavior="position"
-          keyboardVerticalOffset={
-            screenHeight > 639 ? -175 : 639 - screenHeight - 175
-          }
+          keyboardVerticalOffset={-keyboardOffset}
         >
           <View style={styles.content}>
-            <PhotoInput />
-            <Title>Реєстрація</Title>
+            <Title>Увійти</Title>
             <View style={styles.fields}>
-              <AuthInput
-                placeholder="Логін"
-                onChangeText={(value) => handleChange("login", value)}
-                value={form.login}
-              />
               <AuthInput
                 placeholder="Адреса електронної пошти"
                 onChangeText={(value) => handleChange("email", value)}
+                onSubmitEditing={handleSubmit}
                 value={form.email}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -66,36 +65,35 @@ export default RegistrationScreen = () => {
               <AuthInput
                 placeholder="Пароль"
                 onChangeText={(value) => handleChange("password", value)}
+                onSubmitEditing={handleSubmit}
                 value={form.password}
                 type="password"
                 autoCapitalize="none"
               />
             </View>
-            <Button onPress={handleSubmit}>Зареєструватися</Button>
+            <Button onPress={handleSubmit}>Увійти</Button>
             <TextButton
-              text="Вже є аккаунт?"
-              touchableText="Увійти"
+              text="Немає акаунту?"
+              touchableText="Зареєструватися"
               onPress={() => {
-                console.log("Login");
+                navigation.navigate("Registration");
               }}
             />
           </View>
         </KeyboardAvoidingView>
-      </View>
+      </ScrollView>
     </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "flex-end",
+    height: screenHeight,
+    paddingTop: topSpace,
   },
   content: {
-    width: "100%",
-    maxHeight: screenHeight - 90,
-    paddingTop: 92,
-    paddingBottom: 62,
+    minHeight: screenHeight - 44,
+    paddingTop: 32,
     paddingHorizontal: 16,
     backgroundColor: colors.white,
     borderTopLeftRadius: 25,

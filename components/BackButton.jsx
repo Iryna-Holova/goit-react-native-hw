@@ -4,7 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { colors } from "../styles/global";
 import BackIcon from "../assets/icons/arrow-left.svg";
 
-export default BackButton = () => {
+export default BackButton = ({ dark = false }) => {
   const navigation = useNavigation();
 
   return (
@@ -12,7 +12,12 @@ export default BackButton = () => {
       onPress={() => navigation.goBack()}
       style={{ padding: 16 }}
     >
-      <BackIcon width={24} height={24} fill={colors.black_transparent} />
+      <BackIcon
+        width={24}
+        height={24}
+        fill={dark ? colors.white : colors.black_transparent}
+        stroke={dark ? colors.white : null}
+      />
     </TouchableOpacity>
   );
 };

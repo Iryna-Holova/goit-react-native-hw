@@ -14,14 +14,21 @@
     },
     "assetBundlePatterns": ["assets/fonts/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.holova.travelapp",
+      "config": {
+        "googleMapsApiKey": "AIzaSyBi2mqQSTIyWXcjGIxVvahxcG1gjP7f4BI"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "config": {
+        "googleMapsApiKey": "AIzaSyCY6Y3inHOZNTnA_wVS2aVmbyGihJWZcRY"
+      }
     },
     "web": {
       "favicon": "./assets/images/favicon.png"

@@ -11,29 +11,40 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
+
 import { colors, text } from "../styles/global";
 import Button from "../components/Button";
 import Camera from "../assets/icons/camera.svg";
 import MapPin from "../assets/icons/map-pin.svg";
 import Trash from "../assets/icons/trash.svg";
 
-export default CreatePostsScreen = () => {
-  const navigation = useNavigation();
-
+export default CreatePostsScreen = ({ route, navigation }) => {
   const [photoUrl, setPhotoUrl] = useState(null);
   const [title, setTitle] = useState("");
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState({});
+
+  useFocusEffect(() => {
+    if (route.params?.location) {
+      setLocation(route.params.location);
+    }
+    if (route.params?.photoUrl) {
+      setPhotoUrl(route.params.photoUrl);
+    }
+  });
 
   const handleImagePicker = () => {
-    setPhotoUrl(
-      "https://onetreeplanted.org/cdn/shop/articles/Forest_Fog_1800x.jpg?v=1682535224"
-    );
+    navigation.navigate("Camera", {
+      isPortrait: false,
+      parentScreen: "Create",
+    });
   };
 
   const handleLocationPicker = () => {
-    navigation.navigate("Map");
-    setLocation("Ivano-Frankivs'k Region, Ukraine");
+    navigation.navigate("Map", {
+      isPicker: true,
+      location,
+    });
   };
 
   const handleSubmit = () => {
@@ -43,7 +54,7 @@ export default CreatePostsScreen = () => {
   const handleClearForm = () => {
     setPhotoUrl(null);
     setTitle("");
-    setLocation(null);
+    setLocation({});
   };
   return (
     <KeyboardAvoidingView
@@ -96,15 +107,18 @@ export default CreatePostsScreen = () => {
             >
               <MapPin height={24} width={24} stroke={colors.text_gray} />
               <Text
-                style={[text.main, !location && { color: colors.text_gray }]}
+                style={[
+                  text.main,
+                  !location.name && { color: colors.text_gray },
+                ]}
               >
-                {location ?? "Місцевість..."}
+                {location.name ?? "Місцевість..."}
               </Text>
             </Pressable>
           </View>
           <Button
             onPress={handleSubmit}
-            disabled={!photoUrl || !title || !location}
+            disabled={!photoUrl || !title || !location.name}
           >
             Опублікувати
           </Button>

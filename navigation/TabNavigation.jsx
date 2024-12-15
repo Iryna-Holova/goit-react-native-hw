@@ -2,14 +2,14 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import { colors } from "../styles/global";
 import { headerStyles } from "../styles/header";
-import PostsScreen from "./PostsScreen";
-import ProfileScreen from "./ProfileScreen";
+import PostsScreen from "../screens/PostsScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 import CustomTabBar from "../components/TabBar";
 import LogOutButton from "../components/LogOutButton";
 
 const Tabs = createBottomTabNavigator();
 
-export default HomeScreen = () => {
+export default TabNavigation = () => {
   return (
     <Tabs.Navigator
       initialRouteName="Posts"

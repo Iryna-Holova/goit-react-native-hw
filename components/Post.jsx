@@ -30,11 +30,16 @@ export default Post = ({ image, title, comments, likes, location }) => {
         </View>
         <TouchableOpacity
           style={styles.location}
-          onPress={() => navigation.navigate("Map")}
+          onPress={() =>
+            navigation.navigate("Map", {
+              isPicker: false,
+              location,
+            })
+          }
         >
           <Location width={24} height={24} stroke={colors.text_gray} />
           <Text numberOfLines={1} style={styles.locationText}>
-            {location}
+            {location.name}
           </Text>
         </TouchableOpacity>
       </View>

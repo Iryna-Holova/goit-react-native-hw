@@ -1,4 +1,5 @@
 import { Image, StyleSheet } from "react-native";
+import { colors } from "../styles/global";
 
 export default ContentImage = ({ image }) => {
   return (
@@ -11,5 +12,6 @@ const styles = StyleSheet.create({
     height: 240,
     width: "100%",
     borderRadius: 8,
+    backgroundColor: colors.gray,
   },
 });

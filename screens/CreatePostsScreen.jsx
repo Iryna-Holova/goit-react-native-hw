@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 
+import { addPost } from "../services/firestore";
 import { colors, text } from "../styles/global";
 import Button from "../components/Button";
 import Camera from "../assets/icons/camera.svg";
@@ -20,16 +21,19 @@ import MapPin from "../assets/icons/map-pin.svg";
 import Trash from "../assets/icons/trash.svg";
 
 export default CreatePostsScreen = ({ route, navigation }) => {
-  const [photoUrl, setPhotoUrl] = useState(null);
+  const [photoUri, setPhotoUri] = useState(null);
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useFocusEffect(() => {
     if (route.params?.location) {
       setLocation(route.params.location);
+      navigation.setParams({ location: null });
     }
-    if (route.params?.photoUrl) {
-      setPhotoUrl(route.params.photoUrl);
+    if (route.params?.photoUri) {
+      setPhotoUri(route.params.photoUri);
+      navigation.setParams({ photoUri: null });
     }
   });
 
@@ -47,15 +51,23 @@ export default CreatePostsScreen = ({ route, navigation }) => {
     });
   };
 
-  const handleSubmit = () => {
-    navigation.goBack();
+  const handleSubmit = async () => {
+    try {
+      await addPost({ title, location, photoUri });
+      navigation.goBack();
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClearForm = () => {
-    setPhotoUrl(null);
+    setPhotoUri(null);
     setTitle("");
     setLocation({});
   };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -66,17 +78,17 @@ export default CreatePostsScreen = ({ route, navigation }) => {
         <View style={styles.container}>
           <View>
             <Pressable
-              style={[styles.photoInput, { borderWidth: photoUrl ? 0 : 1 }]}
+              style={[styles.photoInput, { borderWidth: photoUri ? 0 : 1 }]}
               onPress={handleImagePicker}
             >
-              {photoUrl && (
-                <Image source={{ uri: photoUrl }} style={styles.photo} />
+              {photoUri && (
+                <Image source={{ uri: photoUri }} style={styles.photo} />
               )}
               <View
                 style={[
                   styles.camera,
                   {
-                    backgroundColor: photoUrl
+                    backgroundColor: photoUri
                       ? colors.white_transparent
                       : colors.white,
                   },
@@ -85,12 +97,12 @@ export default CreatePostsScreen = ({ route, navigation }) => {
                 <Camera
                   height={24}
                   width={24}
-                  fill={photoUrl ? colors.white : colors.text_gray}
+                  fill={photoUri ? colors.white : colors.text_gray}
                 />
               </View>
             </Pressable>
             <Text style={styles.photoInputText}>
-              {photoUrl ? "Редагувати фото" : "Завантажте фото"}
+              {photoUri ? "Редагувати фото" : "Завантажте фото"}
             </Text>
           </View>
           <View style={styles.fields}>
@@ -118,7 +130,7 @@ export default CreatePostsScreen = ({ route, navigation }) => {
           </View>
           <Button
             onPress={handleSubmit}
-            disabled={!photoUrl || !title || !location.name}
+            disabled={!photoUri || !title || !location.name || loading}
           >
             Опублікувати
           </Button>

@@ -1,4 +1,12 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 import { colors, text } from "../styles/global";
@@ -7,8 +15,29 @@ import Comments from "../assets/icons/message.svg";
 import Likes from "../assets/icons/thumbs-up.svg";
 import Location from "../assets/icons/map-pin.svg";
 
-export default Post = ({ image, title, comments, likes, location }) => {
+export default Post = ({
+  id,
+  image,
+  title,
+  commentsCount,
+  likes,
+  location,
+  onToggleLike,
+}) => {
+  const user = useSelector((state) => state.user.uid);
   const navigation = useNavigation();
+  const [loading, setLoading] = useState(false);
+
+  const handleLike = async () => {
+    try {
+      setLoading(true);
+      await onToggleLike(id, likes && likes.includes(user), user);
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -18,15 +47,28 @@ export default Post = ({ image, title, comments, likes, location }) => {
         <View style={styles.stats}>
           <TouchableOpacity
             style={styles.statItem}
-            onPress={() => navigation.navigate("Comments", { image, comments })}
+            onPress={() =>
+              navigation.navigate("Comments", { image, postId: id })
+            }
           >
             <Comments width={24} height={24} fill={colors.orange} />
-            <Text style={styles.statText}>{comments.length}</Text>
+            <Text style={styles.statText}>{commentsCount || 0}</Text>
           </TouchableOpacity>
-          <View style={styles.statItem}>
-            <Likes width={24} height={24} fill={colors.orange} />
-            <Text style={styles.statText}>{likes}</Text>
-          </View>
+          <TouchableOpacity onPress={handleLike} style={styles.statItem}>
+            {!loading ? (
+              <Likes
+                width={24}
+                height={24}
+                fill={
+                  likes && likes.includes(user) ? colors.orange : colors.white
+                }
+                stroke={colors.orange}
+              />
+            ) : (
+              <ActivityIndicator size="small" color={colors.orange} />
+            )}
+            <Text style={styles.statText}>{likes ? likes.length : 0}</Text>
+          </TouchableOpacity>
         </View>
         <TouchableOpacity
           style={styles.location}
@@ -61,7 +103,9 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   statItem: {
+    width: 48,
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     gap: 6,
   },

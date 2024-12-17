@@ -14,15 +14,13 @@ export default AuthInput = (props) => {
   const [isVisible, setIsVisible] = useState(false);
 
   return (
-    <View>
+    <View style={{ overflow: "visible" }}>
       <TextInput
         {...props}
         style={[
           styles.input,
-          isFocused && {
-            backgroundColor: colors.white,
-            borderColor: colors.orange,
-          },
+          isFocused && styles.inputFocused,
+          props.error && styles.inputError,
         ]}
         onBlur={() => setIsFocused(false)}
         onFocus={() => setIsFocused(true)}
@@ -39,6 +37,9 @@ export default AuthInput = (props) => {
           </Text>
         </TouchableOpacity>
       )}
+      {props.error && (
+        <Text style={styles.errorMessage}>{props.errorMessage}</Text>
+      )}
     </View>
   );
 };
@@ -53,6 +54,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     ...text.main,
   },
+  inputFocused: {
+    backgroundColor: colors.white,
+    borderColor: colors.orange,
+  },
+  inputError: {
+    borderColor: "red",
+  },
   showButton: {
     position: "absolute",
     padding: 16,
@@ -61,5 +69,12 @@ const styles = StyleSheet.create({
   showButtonText: {
     ...text.main,
     color: colors.blue,
+  },
+  errorMessage: {
+    ...text.smaller,
+    color: "red",
+    position: "absolute",
+    bottom: -16,
+    left: 16,
   },
 });

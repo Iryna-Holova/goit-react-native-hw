@@ -34,7 +34,6 @@ export default TabNavigation = () => {
         options={{
           headerShown: false,
           sceneStyle: { backgroundColor: "transparent", opacity: 1 },
-          headerTitle: "Natali Romanova",
           headerTransparent: true,
           headerRight: () => <LogOutButton />,
         }}

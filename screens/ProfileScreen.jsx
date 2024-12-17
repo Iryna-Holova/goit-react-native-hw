@@ -1,16 +1,104 @@
-import { useRef } from "react";
-import { Animated, ScrollView, StyleSheet, View } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  ActivityIndicator,
+  Animated,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
+import { getPosts, toggleLike } from "../services/firestore";
+import { updateUserAvatar } from "../services/auth";
 import { colors, text } from "../styles/global";
 import LogOutButton from "../components/LogOutButton";
 import PhotoInput from "../components/PhotoInput";
 import Post from "../components/Post";
-import data from "../data/posts.json";
 
-export default ProfileScreen = () => {
-  const navigation = useNavigation();
+export default ProfileScreen = ({ navigation, route }) => {
+  const dispatch = useDispatch();
+  const { uid, login, avatar } = useSelector((state) => state.user);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchPosts();
+    }, [uid])
+  );
+
+  useEffect(() => {
+    navigation.setOptions({ headerTitle: login });
+  }, [login]);
+
+  useEffect(() => {
+    if (route.params?.photoUri) {
+      uploadAvatar(route.params.photoUri);
+    }
+  }, [route.params?.photoUri]);
+
+  const uploadAvatar = async (photoUri) => {
+    try {
+      setAvatarLoading(true);
+      await updateUserAvatar(photoUri, dispatch);
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const posts = await getPosts(uid);
+      setPosts(posts);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleLike = async (postId, isLiked, user) => {
+    await toggleLike(postId, isLiked);
+
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              likes: isLiked
+                ? post.likes.filter((id) => id !== user)
+                : [...(post.likes || []), user],
+            }
+          : post
+      )
+    );
+  };
+
+  const handleAddAvatar = () => {
+    navigation.navigate("Camera", {
+      isPortrait: true,
+      parentScreen: "Profile",
+    });
+  };
+
+  const handleResetAvatar = () => {
+    uploadAvatar(null);
+  };
+
+  const handleScroll = (event) => {
+    const currentPosition = event.nativeEvent.contentOffset.y;
+    navigation.setOptions({ headerShown: currentPosition > 175 });
+    scrollY.setValue(currentPosition);
+    if (currentPosition < -200) {
+      fetchPosts();
+    }
+  };
 
   const buttonPosition = scrollY.interpolate({
     inputRange: [100, 175],
@@ -24,12 +112,6 @@ export default ProfileScreen = () => {
     extrapolate: "clamp",
   });
 
-  const handleScroll = (event) => {
-    const currentPosition = event.nativeEvent.contentOffset.y;
-    navigation.setOptions({ headerShown: currentPosition > 175 });
-    scrollY.setValue(currentPosition);
-  };
-
   return (
     <ScrollView
       onScroll={(event) => {
@@ -37,7 +119,6 @@ export default ProfileScreen = () => {
       }}
       scrollEventThrottle={16}
       style={styles.container}
-      showsVerticalScrollIndicator={false}
     >
       <View style={styles.content}>
         <Animated.View
@@ -46,15 +127,30 @@ export default ProfileScreen = () => {
           <LogOutButton />
         </Animated.View>
 
-        <PhotoInput />
+        <PhotoInput
+          loading={avatarLoading}
+          photoUri={avatar}
+          onAddAvatar={handleAddAvatar}
+          onResetAvatar={handleResetAvatar}
+        />
         <Animated.Text style={[styles.title, { fontSize: titleSize }]}>
-          Natali Romanova
+          {login}
         </Animated.Text>
 
         <View style={styles.list}>
-          {data.map((post) => (
-            <Post {...post} key={post.id} />
-          ))}
+          {loading ? (
+            <ActivityIndicator
+              size="large"
+              color={colors.gray_transparent}
+              style={{
+                marginTop: 100,
+              }}
+            />
+          ) : (
+            posts.map((post) => (
+              <Post {...post} key={post.id} onToggleLike={handleToggleLike} />
+            ))
+          )}
         </View>
       </View>
     </ScrollView>
@@ -66,6 +162,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
+    minHeight: "100%",
     marginTop: 147,
     paddingTop: 92,
     paddingBottom: 446,

@@ -1,15 +1,23 @@
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   Dimensions,
   Keyboard,
   KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 
+import { registerDB } from "../services/auth";
+import {
+  validateEmail,
+  validateLogin,
+  validatePassword,
+} from "../utils/validation";
 import { colors } from "../styles/global";
 import PhotoInput from "../components/PhotoInput";
 import Title from "../components/Title";
@@ -24,27 +32,70 @@ const topSpace =
     ? screenHeight * 0.32
     : Math.max(screenHeight - 487, 104);
 
-export default RegistrationScreen = () => {
-  const navigation = useNavigation();
+export default RegistrationScreen = ({ navigation, route }) => {
+  const dispatch = useDispatch();
 
   const [form, setform] = useState({
     login: "",
     email: "",
     password: "",
   });
+  const [photoUri, setPhotoUri] = useState(null);
+  const [error, setError] = useState(null);
+  const [loginError, setLoginError] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (field, value) => {
+    setError(null);
+    if (field === "login") setLoginError(false);
+    if (field === "email") setEmailError(false);
+    if (field === "password") setPasswordError(false);
+
     setform({
       ...form,
       [field]: value,
     });
   };
 
-  const handleSubmit = () => {
-    console.log(
-      `Login: ${form.login}, Email: ${form.email}, Password: ${form.password}`
-    );
-    navigation.navigate("Home");
+  useFocusEffect(() => {
+    if (route.params?.photoUri) {
+      setPhotoUri(route.params.photoUri);
+      navigation.setParams({ photoUri: null });
+    }
+  });
+
+  const handleAddAvatar = () => {
+    navigation.navigate("Camera", {
+      isPortrait: true,
+      parentScreen: "Registration",
+    });
+  };
+
+  const handleResetAvatar = () => {
+    setPhotoUri(null);
+  };
+
+  const handleSubmit = async () => {
+    if (!validateLogin(form.login)) {
+      return setLoginError(true);
+    }
+    if (!validateEmail(form.email)) {
+      return setEmailError(true);
+    }
+    if (!validatePassword(form.password)) {
+      return setPasswordError(true);
+    }
+
+    try {
+      setLoading(true);
+      await registerDB(form, photoUri, dispatch);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -52,7 +103,11 @@ export default RegistrationScreen = () => {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <KeyboardAvoidingView behavior="position" keyboardVerticalOffset={-113}>
           <View style={styles.content}>
-            <PhotoInput />
+            <PhotoInput
+              photoUri={photoUri}
+              onAddAvatar={handleAddAvatar}
+              onResetAvatar={handleResetAvatar}
+            />
             <Title>Реєстрація</Title>
             <View style={styles.fields}>
               <AuthInput
@@ -60,6 +115,8 @@ export default RegistrationScreen = () => {
                 onChangeText={(value) => handleChange("login", value)}
                 onSubmitEditing={handleSubmit}
                 value={form.login}
+                error={loginError}
+                errorMessage="Логін повинен містити не менше 3 символів"
               />
               <AuthInput
                 placeholder="Адреса електронної пошти"
@@ -68,6 +125,8 @@ export default RegistrationScreen = () => {
                 value={form.email}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                error={emailError}
+                errorMessage="Неправильний формат електронної пошти"
               />
               <AuthInput
                 placeholder="Пароль"
@@ -76,9 +135,14 @@ export default RegistrationScreen = () => {
                 value={form.password}
                 type="password"
                 autoCapitalize="none"
+                error={passwordError}
+                errorMessage="Пароль повинен містити не менше 6 символів"
               />
+              {error && <Text style={styles.errorMessage}>{error}</Text>}
             </View>
-            <Button onPress={handleSubmit}>Зареєструватися</Button>
+            <Button disabled={loading} onPress={handleSubmit}>
+              Зареєструватися
+            </Button>
             <TextButton
               text="Вже є аккаунт?"
               touchableText="Увійти"
@@ -107,5 +171,13 @@ const styles = StyleSheet.create({
   fields: {
     gap: 16,
     marginBottom: 43,
+  },
+  errorMessage: {
+    color: "red",
+    textAlign: "center",
+    position: "absolute",
+    bottom: -32,
+    left: 0,
+    right: 0,
   },
 });

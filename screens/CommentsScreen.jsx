@@ -1,5 +1,6 @@
-import { useRoute } from "@react-navigation/native";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -9,15 +10,58 @@ import {
   View,
 } from "react-native";
 
+import { addComment, getCommentsByPostId } from "../services/firestore";
 import { colors, text } from "../styles/global";
 import ArrowTop from "../assets/icons/arrow-top.svg";
 import ContentImage from "../components/ContentImage";
 import Comment from "../components/Comment";
 
-export default CommentsScreen = () => {
-  const {
-    params: { image, comments },
-  } = useRoute();
+export default CommentsScreen = ({ navigation, route }) => {
+  const { image, postId } = route.params;
+
+  const [inputText, setInputText] = useState("");
+  const [comments, setComments] = useState([]);
+  const [isSending, setIsSending] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef();
+  const containerRef = useRef();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: `Коментарі (${comments.length})`,
+    });
+  }, [comments.length]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const comments = await getCommentsByPostId(postId);
+        setComments(comments);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleSendComment = async () => {
+    try {
+      setIsSending(true);
+      const comment = await addComment(postId, inputText);
+      setComments([...comments, comment]);
+      setInputText("");
+      inputRef.current.blur();
+      containerRef.current.scrollToEnd({ animated: true });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -25,24 +69,43 @@ export default CommentsScreen = () => {
       style={{ flex: 1 }}
       keyboardVerticalOffset={Platform.OS === "ios" ? 98 : null}
     >
-      <ScrollView style={{ flex: 1, flexShrink: 1 }}>
+      <ScrollView style={{ flex: 1, flexShrink: 1 }} ref={containerRef}>
         <View style={styles.container}>
           <ContentImage image={image} />
           <View style={styles.list}>
-            {comments.map(({ id, ...data }) => (
-              <Comment key={id} {...data} />
-            ))}
+            {loading ? (
+              <ActivityIndicator
+                size="large"
+                color={colors.text_gray}
+                style={{
+                  marginTop: 100,
+                }}
+              />
+            ) : (
+              comments.map(({ id, ...data }) => <Comment key={id} {...data} />)
+            )}
           </View>
         </View>
       </ScrollView>
       <View style={styles.inputContainer}>
         <TextInput
+          ref={inputRef}
           placeholder="Коментувати..."
           placeholderTextColor={colors.text_gray}
           style={styles.input}
+          value={inputText}
+          onChangeText={(value) => setInputText(value)}
         />
-        <TouchableOpacity style={styles.sendButton}>
-          <ArrowTop height={24} width={24} fill={colors.white} />
+        <TouchableOpacity
+          disabled={!inputText || isSending}
+          onPress={handleSendComment}
+          style={styles.sendButton}
+        >
+          {!isSending ? (
+            <ArrowTop height={24} width={24} fill={colors.white} />
+          ) : (
+            <ActivityIndicator size="small" color={colors.white} />
+          )}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

@@ -1,15 +1,18 @@
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import {
   Dimensions,
   Keyboard,
   KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 
+import { loginDB } from "../services/auth";
+import { validateEmail, validatePassword } from "../utils/validation";
 import { colors } from "../styles/global";
 import Title from "../components/Title";
 import AuthInput from "../components/AuthInput";
@@ -24,24 +27,45 @@ const topSpace =
     : Math.max(screenHeight - 356, 44);
 const keyboardOffset = screenHeight - topSpace - 280;
 
-export default LoginScreen = () => {
-  const navigation = useNavigation();
+export default LoginScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
 
   const [form, setform] = useState({
     email: "",
     password: "",
   });
+  const [error, setError] = useState(null);
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (field, value) => {
+    setError(null);
+    if (field === "email") setEmailError(false);
+    if (field === "password") setPasswordError(false);
+
     setform({
       ...form,
       [field]: value,
     });
   };
 
-  const handleSubmit = () => {
-    console.log(`Email: ${form.email}, Password: ${form.password}`);
-    navigation.navigate("Home");
+  const handleSubmit = async () => {
+    if (!validateEmail(form.email)) {
+      return setEmailError(true);
+    }
+    if (!validatePassword(form.password)) {
+      return setPasswordError(true);
+    }
+
+    try {
+      setLoading(true);
+      await loginDB(form, dispatch);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,6 +85,8 @@ export default LoginScreen = () => {
                 value={form.email}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                error={emailError}
+                errorMessage="Неправильний формат електронної пошти"
               />
               <AuthInput
                 placeholder="Пароль"
@@ -69,9 +95,14 @@ export default LoginScreen = () => {
                 value={form.password}
                 type="password"
                 autoCapitalize="none"
+                error={passwordError}
+                errorMessage="Пароль повинен містити не менше 6 символів"
               />
+              {error && <Text style={styles.errorMessage}>{error}</Text>}
             </View>
-            <Button onPress={handleSubmit}>Увійти</Button>
+            <Button disabled={loading} onPress={handleSubmit}>
+              Увійти
+            </Button>
             <TextButton
               text="Немає акаунту?"
               touchableText="Зареєструватися"
@@ -102,5 +133,13 @@ const styles = StyleSheet.create({
   fields: {
     gap: 16,
     marginBottom: 43,
+  },
+  errorMessage: {
+    color: "red",
+    textAlign: "center",
+    position: "absolute",
+    bottom: -32,
+    right: 0,
+    left: 0,
   },
 });

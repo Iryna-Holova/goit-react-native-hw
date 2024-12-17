@@ -1,25 +1,32 @@
+import { useSelector } from "react-redux";
 import { Image, StyleSheet, Text, View } from "react-native";
 
 import { formatDate } from "../utils/formatDate";
 import { colors, text as textStyle } from "../styles/global";
 
-export default Comment = ({ date, text, user }) => {
+export default Comment = ({ createdAt, authorId, text, authorAvatar }) => {
+  const user = useSelector((state) => state.user.uid);
+
   return (
-    <View style={user.id === 2 ? styles.containerRight : styles.containerLeft}>
+    <View
+      style={authorId === user ? styles.containerRight : styles.containerLeft}
+    >
       <Image
-        source={{ uri: user.avatar }}
+        source={{ uri: authorAvatar }}
         resizeMode="cover"
         style={styles.avatar}
       />
       <View
         style={[
           styles.body,
-          user.id === 2 ? styles.bodyRight : styles.bodyLeft,
+          authorId === user ? styles.bodyRight : styles.bodyLeft,
         ]}
       >
         <Text style={textStyle.small}>{text}</Text>
-        <Text style={[textStyle.tiny, user.id !== 2 && { textAlign: "right" }]}>
-          {formatDate(date)}
+        <Text
+          style={[textStyle.tiny, authorId !== user && { textAlign: "right" }]}
+        >
+          {formatDate(createdAt.seconds * 1000)}
         </Text>
       </View>
     </View>
@@ -39,6 +46,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
+    backgroundColor: colors.gray,
   },
   body: {
     width: "100%",

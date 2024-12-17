@@ -1,41 +1,40 @@
-import { useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { colors } from "../styles/global";
 import Plus from "../assets/icons/plus.svg";
-import tempAvatar from "../assets/images/avatar.png";
 
-export default PhotoInput = () => {
-  const [avatar, setAvatar] = useState(null);
-
-  const addAvatar = () => {
-    setAvatar(tempAvatar);
-  };
-
-  const removeAvatar = () => {
-    setAvatar(null);
-  };
-
+export default PhotoInput = ({
+  photoUri,
+  onAddAvatar,
+  onResetAvatar,
+  loading,
+}) => {
   return (
-    <Pressable style={styles.photoBox} onPress={addAvatar}>
-      {avatar && <Image style={styles.image} source={avatar} />}
+    <Pressable disabled={loading} onPress={onAddAvatar} style={styles.photoBox}>
+      {photoUri && <Image source={{ uri: photoUri }} style={styles.image} />}
+      {loading && <ActivityIndicator size="large" color={colors.orange} />}
       <Pressable
+        disabled={loading}
+        onPress={photoUri ? onResetAvatar : onAddAvatar}
         style={styles.photoButton}
-        onPress={avatar ? removeAvatar : addAvatar}
       >
         <View
           style={[
-            styles.icon,
-            {
-              borderColor: avatar ? colors.border_gray : colors.orange,
-              transform: [{ rotate: avatar ? "45deg" : "0deg" }],
-            },
+            styles.iconContainer,
+            { borderColor: photoUri ? colors.border_gray : colors.orange },
           ]}
         >
           <Plus
             width={24}
             height={24}
-            fill={avatar ? colors.text_gray : colors.orange}
+            fill={photoUri ? colors.text_gray : colors.orange}
+            style={{ transform: [{ rotate: photoUri ? "45deg" : "0deg" }] }}
           />
         </View>
       </Pressable>
@@ -53,11 +52,14 @@ const styles = StyleSheet.create({
     top: -60,
     left: "50%",
     transform: [{ translateX: -50 }],
+    justifyContent: "center",
+    alignItems: "center",
   },
   image: {
     width: "100%",
     height: "100%",
     borderRadius: 16,
+    position: "absolute",
   },
   photoButton: {
     position: "absolute",
@@ -65,7 +67,7 @@ const styles = StyleSheet.create({
     right: -26,
     padding: 14,
   },
-  icon: {
+  iconContainer: {
     backgroundColor: colors.white,
     borderWidth: 1,
     borderRadius: 16,

@@ -10,7 +10,9 @@ import Button from "../components/Button";
 
 export default CameraScreen = ({ navigation, route }) => {
   const [asked, setAsked] = useState(false);
-  const [facing, setFacing] = useState(route.params?.facing || "back");
+  const [facing, setFacing] = useState(
+    route.params?.isPortrait ? "front" : "back"
+  );
   const [permission, requestPermission] = useCameraPermissions();
   const camera = useRef();
 
@@ -51,7 +53,14 @@ export default CameraScreen = ({ navigation, route }) => {
   const handleTakePicture = async () => {
     if (!camera) return;
     const image = await camera.current?.takePictureAsync();
-    navigation.popTo(route.params.parentScreen, { photoUrl: image.uri });
+    if (route.params?.parentScreen === "Profile") {
+      navigation.popTo("Home", {
+        screen: "Profile",
+        params: { photoUri: image.uri },
+      });
+    } else {
+      navigation.popTo(route.params.parentScreen, { photoUri: image.uri });
+    }
   };
 
   return (
